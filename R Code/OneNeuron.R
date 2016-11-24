@@ -18,12 +18,17 @@ names(weights) <- unname(sapply(names(weights), function(name)
   paste0(name,"_weight"))
 ) 
 
-# Set up universal partial derivative function 
+# Set up sigmoid function with rate of change parameter 
 sum_prod <- paste0(names(weights),"*", colnames(all.dat$training[,-outcome_pos]))
 
 sum_prod <- paste(sum_prod, collapse = " + ")
 
-sig_func <- paste0("1/(1+exp(1)^-(",sum_prod,"))")
+# Larger parameter means the sigmoid function changes faster
+# Treat this as a "random" number between x and y when building
+# the larger random network, 0.5 and 1 are decent starting points
+roc_sig <- exp(1)/pi
+
+sig_func <- paste0("1/(1+exp(1)^-(",roc_sig,"*","(",sum_prod,")))")
 
 # Partial derivative with respect to inputs (which don't change)
 # and weights (which do change), compiling for extra speed and clean up
@@ -50,7 +55,7 @@ learning_rate <- 1/1e3
 
 grad_reg <- 1/1e1
 
-iter <- 1e6
+iter <- 2e6
 
 # Creating sample index vector outside loop for speed and setting up
 # default bias weight
@@ -116,7 +121,7 @@ preds <- pred_gen(all.dat$validation)
 lib_load("MLmetrics")
 
 # Log loss
-# 0.1095127 #
+# 0.1456651 #
 LogLoss(y_pred = preds, y_true = all.dat$validation$Occupancy)
 
 # Accuracy
