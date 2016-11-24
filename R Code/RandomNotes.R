@@ -103,3 +103,10 @@ sum_prod_str <- lapply(1:length(weights), function(index) {
   cost_der <- evaluator(
     paste0("deriv(cost ~ ", cost_func,", names(weights)",", funct = T)")
   )
+  
+  
+  x = sum(weights*inputs)
+  
+  -(0*log(1/(1+exp(1)^-(x)))+(1-0)*log(1-1/(1+exp(1)^-(x))))
+  
+  

@@ -15,11 +15,12 @@ The purpose of this GitHub repository is to document my adventures in building m
 ### Bonus Goals
 
 1. Experiment with different types of training approaches and cost functions
-2. Automatically create "random" networks, train them, and ensemble them to create a meta-model
+2. Automatically create "random" networks, train them, and ensemble them to create a meta-model:
   + Random activation functions
   + Random cost functions
   + Random connections
-  
+3. Try to build a faster implementation with Rcpp or Julia
+
 ### Resources
 
 [Hacker's guide to Neural Networks by Andrej Karpathy](http://karpathy.github.io/neuralnets/)
