@@ -109,4 +109,34 @@ sum_prod_str <- lapply(1:length(weights), function(index) {
   
   -(0*log(1/(1+exp(1)^-(x)))+(1-0)*log(1-1/(1+exp(1)^-(x))))
   
+  # No point in appending hidden constants for the soft pos/neg functions
+  # That's what the final weights are for!
+  
+  # 3) Generate and capture functional forms for hidden layer neurons
+  pos_consts <- runif(n = round(hidden_size/2),
+                      min = 1, max = 2)
+  
+  neg_consts <- runif(n = hidden_size-round(hidden_size/2),
+                      min = -2, max = -1)
+  
+  # Randomize order
+  all_consts <- sample(c(pos_consts, neg_consts))
+  
+  # Copy of hidden nodes that holds weights
+  hidden_functs <- hidden_nodes
+  
+  for(i in 1:hidden_size) {
+    
+    string_vect <- hidden_nodes[[i]]
+    
+    # Computing a string of sum(weights*inputs)
+    prods <- paste0("(",string_vect,"*",names(string_vect),")")
+    
+    sums <- paste0(prods,collapse = "+")
+    
+    funct <- paste0(all_consts[i],"*","log(1+exp(1)^(",sums,"))")
+    
+    hidden_functs[[i]] <- funct
+    
+  }
   
