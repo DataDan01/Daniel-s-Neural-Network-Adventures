@@ -150,31 +150,35 @@ sig_der <- cmpfun(sig_der)
 # Cleaing up
 zzz_need <- which(ls() %in% c("sig_der","all_der_names","all.dat","lib_load"))
 
-rm(list=ls()[-zzz_need]); rm(zzz_need)
+rm(list=ls()[-zzz_need])
 
+# Training setup begins
 # Initialize random weights for hidden and output layers
 outcome_pos <- ncol(all.dat$training)
 no_inputs <- outcome_pos-1
 
-weights <- rnorm(length(all_der_names)-no_inputs)
-names(weights) <- all_der_names[-(1:no_inputs)]
+weights <- rnorm(length(all_der_names)-(no_inputs+1))
+names(weights) <- all_der_names[-(1:(no_inputs+1))]
+
 
 # Separating inputs and outputs
 inputs <- all.dat$training[,-outcome_pos]
 outputs <- all.dat$training[,outcome_pos]
 
+## Return all below to train more
 # Regularization and learning for network
-learning_rate <- 1/1e3
+learning_rate <- 1/1e2
 
-grad_reg <- 1/1e1
+grad_reg <- 1/1e2
 
-iter <- 1e4
+iter <- 1e6
 
 # Creating sample index vector outside loop for speed and setting up
 # default bias weight
 samp_ind <- sample(1:nrow(all.dat$training), size = iter, replace = T)
 
 bias <- 1
+names(bias) <- "bias"
 
 # Loop begins 
 for(i in 1:iter) {
@@ -182,9 +186,10 @@ for(i in 1:iter) {
   # Compute partial derivatives of sigmoid function given weights and 
   # holding the inputs constant, compact form for speed
   pdevs <- do.call(sig_der, as.list(c(weights,
+                                      bias,
                                       inputs[samp_ind[i],])))
   
-  attr(pdevs,"gradient") <- attr(pdevs,"gradient")[1:outcome_pos]
+  attr(pdevs,"gradient") <- attr(pdevs,"gradient")[-(1:outcome_pos)]
   
   # Observed             # Predicted output at current input levels
   pull <- outputs[samp_ind[i]] - head(pdevs)
@@ -212,12 +217,12 @@ pred_gen <- function(inputs_df) {
   preds <- vector("numeric", length = nrow(inputs_df))
   
   dat <- data.frame(bias = 1,
-                    inputs_df)
+                    inputs_df[,-outcome_pos])
   
-  for(i in 1:nrow(dat)) {
+  for(i in 1:length(preds)) {
     
-    preds[i] <- with(dat[i,],do.call(sig_der, as.list(c(weights,
-                                           dat[i,]))))
+    preds[i] <- head(do.call(sig_der, as.list(c(weights,
+                                                dat[i,]))))
   }
   
   return(preds)
@@ -228,17 +233,13 @@ preds <- pred_gen(all.dat$validation)
 lib_load("MLmetrics")
 
 # Log loss
-# 0.1456651 #
+# 0.09883161 #
 LogLoss(y_pred = preds, y_true = all.dat$validation$Occupancy)
 
 # Accuracy
 lib_load("caret")
 
-# 0.9786 # Looks like this is peak accuracy
+# 0.9707 # Looks like this is peak accuracy
 round(confusionMatrix(data = round(preds,0),
                       reference = all.dat$validation$Occupancy)$overall,4)
 
-## Work to be done:
-# Fix loop to only apply regularization on sigmoid portion
-# Fix prediction function
-# Test predictive ability
