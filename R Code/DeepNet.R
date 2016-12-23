@@ -12,8 +12,9 @@ if(!("all.dat" %in% ls())) source("./DataPrep.R")
 
 # Initializing parameters and empty network
 layers <- 3
-neurons <- 4
-min_conn <- 3
+neurons <- 5
+min_conn <- 5
+sigmoid_const <- -0.1
 
 
 net <- vector(mode = 'list', length = layers+1)
@@ -28,7 +29,9 @@ for(i in 2:(layers+1)) {
   
   for(j in 1:neurons) {
     
-    net[[i]][j] <- sample(min_conn:neurons, 1)
+    if(min_conn == neurons) { net[[i]][j] <- min_conn }
+      else
+    { net[[i]][j] <- sample(x = min_conn:neurons, size = 1, replace = F) }
     
     names(net[[i]])[j] <- paste0("n_",i,"_",j) 
     
@@ -91,7 +94,7 @@ for(i in 3:(layers+1)) {
   }
   
   # Clear out previous layer to save memory
-  #net[[i-1]] <- ""
+  net[[i-1]] <- ""
 }
 
 # Roll into giant final function and into sigmoid, cleaing large objects
@@ -102,14 +105,16 @@ sig_input <- paste0("(",
                     )
 rm(net)
 
-sig_fun <- paste0("1/(1+exp(1)^-(",sig_input,"))")
+sig_fun <- paste0("1/(1+exp(1)^(",sigmoid_const,"*(",sig_input,")))")
 
 rm(sig_input)
 
 # Extracting all of the weights
-weights <- strsplit(sig_fun, split = " ")[[1]]
+split_fun <- strsplit(sig_fun, split = " ")[[1]]
 
-weights <- weights[sapply(weights, grepl, pattern = "[w_][0-9][0-9][_]")]
+weights <- split_fun[sapply(split_fun, grepl, pattern = "[w_][0-9][0-9][_]")]
+
+weights <- unique(weights)
 
 weights <- sort(weights)
 
@@ -117,6 +122,11 @@ weights <- sort(weights)
 outcome_loc <- ncol(all.dat$training)
 
 input_names <- names(all.dat$training)[-outcome_loc]
+
+# Finding which inputs are actually used
+input_inx <- which(input_names %in% split_fun)
+
+input_names <- input_names[input_inx]
 
 all_der_names <- c(input_names,
                    "bias",
@@ -132,12 +142,17 @@ lib_load("compiler")
 sig_deriv <- cmpfun(sig_deriv)
 
 rm(list = setdiff(ls(),
-                  c("all.dat","weights","sig_deriv","outcome_loc","lib_load")))
+                  c("all.dat","weights","sig_deriv",
+                    "outcome_loc","lib_load","input_inx")))
 
 # Intialize weights
-names(weights) <- weights
+w_names <- weights
 
 weights <- rnorm(n = length(weights), mean = 0, sd = 2)
+
+names(weights) <- w_names
+
+rm(w_names)
 
 # Separating inputs and outputs
 inputs <- all.dat$training[,-outcome_loc]
@@ -162,11 +177,11 @@ for(i in 1:iter) {
  
   # Compute partial derivatives of sigmoid function given weights and 
   # holding the inputs constant, compact form for speed
-  pdevs <- do.call(sig_deriv, as.list(c(inputs[samp_ind[i],],
+  pdevs <- do.call(sig_deriv, as.list(c(inputs[samp_ind[i],input_inx],
                                         bias,
                                         weights))) 
   
-  attr(pdevs,"gradient") <- attr(pdevs,"gradient")[-(1:outcome_loc)]
+  attr(pdevs,"gradient") <- attr(pdevs,"gradient")[-(1:(length(input_inx)+1))]
   
   # Observed             # Predicted output at current input levels
   pull <- outputs[samp_ind[i]] - head(pdevs)  
@@ -202,7 +217,7 @@ pred_gen <- function(inputs_df) {
   
   for(i in 1:length(preds)) {
     
-    preds[i] <- head(do.call(sig_deriv, as.list(c(dat[i,],
+    preds[i] <- head(do.call(sig_deriv, as.list(c(dat[i,c(input_inx,ncol(dat))],
                                                   weights))))
   }
   
@@ -223,4 +238,3 @@ LogLoss(y_pred = preds, y_true = all.dat$validation$Occupancy)
 # 0.9707 # Looks like this is peak accuracy
 #round(confusionMatrix(data = round(preds,0),
                       #reference = all.dat$validation$Occupancy)$overall,4)
-
