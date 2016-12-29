@@ -14,7 +14,7 @@ if(!("all.dat" %in% ls())) source("./DataPrep.R")
 layers <- 3
 neurons <- 5
 min_conn <- 5
-sigmoid_const <- -0.1
+sigmoid_const <- -0.2
 
 
 net <- vector(mode = 'list', length = layers+1)
@@ -72,7 +72,7 @@ for(i in 2:(layers+1)) {
   
   for(j in 1:neurons) {
   
-    net[[i]][j] <- paste0("(log(1+exp(1)^",net[[i]][j],"))")
+    net[[i]][j] <- paste0("(log(1+exp(",net[[i]][j],")))")
   
   }
 }
@@ -105,11 +105,11 @@ sig_input <- paste0("(",
                     )
 rm(net)
 
-sig_fun <- paste0("1/(1+exp(1)^(",sigmoid_const,"*(",sig_input,")))")
+sig_fun <- paste0("1/(1+exp(",sigmoid_const,"*(",sig_input,")))")
 
 rm(sig_input)
 
-# Extracting all of the weights
+# Extracting all of the unqiue weights
 split_fun <- strsplit(sig_fun, split = " ")[[1]]
 
 weights <- split_fun[sapply(split_fun, grepl, pattern = "[w_][0-9][0-9][_]")]
@@ -148,7 +148,7 @@ rm(list = setdiff(ls(),
 # Intialize weights
 w_names <- weights
 
-weights <- rnorm(n = length(weights), mean = 0, sd = 2)
+weights <- rnorm(n = length(weights), mean = 0, sd = 0.1)
 
 names(weights) <- w_names
 
@@ -159,11 +159,11 @@ inputs <- all.dat$training[,-outcome_loc]
 outputs <- all.dat$training[,outcome_loc]
 
 # Regularization and learning for network
-learning_rate <- 1/1e2
+learning_rate <- 1/1e3
 
-grad_reg <- 1/1e1
+grad_reg <- 1/1e2
 
-iter <- 1e4
+iter <- 1e5
 
 # Creating sample index vector outside loop for speed and setting up
 # default bias weight
@@ -181,10 +181,11 @@ for(i in 1:iter) {
                                         bias,
                                         weights))) 
   
+  # Getting rid of partial derivatives with respect to inputs and bias const.
   attr(pdevs,"gradient") <- attr(pdevs,"gradient")[-(1:(length(input_inx)+1))]
   
   # Observed             # Predicted output at current input levels
-  pull <- outputs[samp_ind[i]] - head(pdevs)  
+  pull <- outputs[samp_ind[i]] - head(pdevs)#; print(pull)  
   
   # Taking the inverse of the partial derivatives to solve for change in weight
   grad_inv <- 1/attr(pdevs, 'gradient')
@@ -201,10 +202,25 @@ for(i in 1:iter) {
     
     return(grad)
   })
-  
+
   # Apply learning rate and change weights according to capped partial derivs
   weights <- weights + (pull * grad_inv * learning_rate)
   
+  # If weights are basically the same, reset closest ones --needs work
+#   nil <- sapply(weights, function(weight) {
+#   
+#    # Return absolute percentage differences    
+#    perc_dif <- abs((abs(weights) - abs(weight))/weights)
+#    
+#    # Find which weights are too close to this one
+#    change_inx <- which(0 < perc_dif & perc_dif < 0.01)
+#    
+#    # Change the weights that are too close
+#    weights[change_inx] <<- rnorm(n = length(change_inx)) + weights[change_inx]
+#    
+#    return(NULL)
+#   #})
+#   
 }
 
 # Pushing out predictions
@@ -217,8 +233,10 @@ pred_gen <- function(inputs_df) {
   
   for(i in 1:length(preds)) {
     
-    preds[i] <- head(do.call(sig_deriv, as.list(c(dat[i,c(input_inx,ncol(dat))],
-                                                  weights))))
+    input <- as.list(c(dat[i,c(input_inx,ncol(dat))],
+                       weights))
+    
+    preds[i] <- head(do.call(sig_deriv, input))
   }
   
   return(preds)
@@ -229,8 +247,12 @@ preds <- pred_gen(all.dat$validation)
 lib_load("MLmetrics")
 
 # Log loss
-# 0.09883161 #
+# 0.6931471 #
 LogLoss(y_pred = preds, y_true = all.dat$validation$Occupancy)
+
+plot(weights)
+
+plot(density(preds))
 
 # Accuracy
 #lib_load("caret")

@@ -128,10 +128,10 @@ $(document).ready(function () {
 <div id="the-plan" class="section level3">
 <h3>The Plan</h3>
 <ol style="list-style-type: decimal">
-<li>Find and prepare a data set to work on</li>
-<li>Build a single neuron and figure out how to train it</li>
-<li>Chain together a few neurons by hand, train them, and see if they perform better than the single neuron</li>
-<li>Created an automated way to chain together neurons</li>
+<li>Find and prepare a data set to work on (Done)</li>
+<li>Build a single neuron and figure out how to train it (Done)</li>
+<li>Chain together a few neurons by hand, train them, and see if they perform better than the single neuron (Done)</li>
+<li>Created an automated way to chain together neurons (In Progress)</li>
 </ol>
 </div>
 <div id="bonus-goals" class="section level3">
@@ -148,6 +148,10 @@ $(document).ready(function () {
 <ol start="3" style="list-style-type: decimal">
 <li>Try to build a faster implementation with Rcpp or Julia</li>
 </ol>
+</div>
+<div id="current-progress" class="section level3">
+<h3>Current Progress</h3>
+<p>I’m getting stuck while trying to roll up neurons into each other and finally into the sigmoid output. I successfully programmatically rolled everything into one massive sigmoid function and was able to compute the partial derivatives. For the single neuron, playing around with the learning rate and capping the partial derivatives (to prevent sigmoid gradient explosion) led to reasonable accuracy. Stochastic gradient descent on the deeper network is creating weights that basically output a probability of 0.5, which leads to a similar log-loss as just naively guessing the average. This was a decent first attempt but I am definitely missing some intuition here. The current plan is to <a href="https://ocw.mit.edu/courses/mathematics/18-02sc-multivariable-calculus-fall-2010">learn more calculus</a> so I can <a href="http://cs231n.stanford.edu/">learn more about neural networks</a>. I already picked up some Python to prepare for CS231n.</p>
 </div>
 <div id="resources" class="section level3">
 <h3>Resources</h3>

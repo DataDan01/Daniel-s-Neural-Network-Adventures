@@ -171,7 +171,7 @@ learning_rate <- 1/1e2
 
 grad_reg <- 1/1e2
 
-iter <- 1e6
+iter <- 1e5
 
 # Creating sample index vector outside loop for speed and setting up
 # default bias weight
