@@ -10,7 +10,11 @@ The purpose of this GitHub repository is to document my adventures in building m
 1. Find and prepare a data set to work on (Done)
 2. Build a single neuron and figure out how to train it (Done)
 3. Chain together a few neurons by hand, train them, and see if they perform better than the single neuron (Done)
-4. Created an automated way to chain together neurons (In Progress)
+4. Create an automated way to chain together neurons (In Progress)
+
+### Current Progress
+
+I'm getting stuck while trying to roll up neurons into each other and finally into the sigmoid output. I successfully programmatically rolled everything into one massive sigmoid function and was able to compute the partial derivatives. For the single neuron, playing around with the learning rate and capping the partial derivatives (to prevent sigmoid gradient explosion) led to reasonable accuracy. Stochastic gradient descent on the deeper network is creating weights that basically output a probability of 0.5, which leads to a similar log-loss as just naively guessing the average. This was a decent first attempt but I am definitely missing some intuition here. The current plan is to [learn more calculus](https://ocw.mit.edu/courses/mathematics/18-02sc-multivariable-calculus-fall-2010) so I can [learn more about neural networks](http://cs231n.stanford.edu/). I already picked up some Python to prepare for CS231n. 
 
 ### Bonus Goals
 
@@ -20,10 +24,6 @@ The purpose of this GitHub repository is to document my adventures in building m
   + Random cost functions
   + Random connections
 3. Try to build a faster implementation with Rcpp or Julia
-
-### Current Progress
-
-I'm getting stuck while trying to roll up neurons into each other and finally into the sigmoid output. I successfully programmatically rolled everything into one massive sigmoid function and was able to compute the partial derivatives. For the single neuron, playing around with the learning rate and capping the partial derivatives (to prevent sigmoid gradient explosion) led to reasonable accuracy. Stochastic gradient descent on the deeper network is creating weights that basically output a probability of 0.5, which leads to a similar log-loss as just naively guessing the average. This was a decent first attempt but I am definitely missing some intuition here. The current plan is to [learn more calculus](https://ocw.mit.edu/courses/mathematics/18-02sc-multivariable-calculus-fall-2010) so I can [learn more about neural networks](http://cs231n.stanford.edu/). I already picked up some Python to prepare for CS231n. 
 
 ### Resources
 
